@@ -1,0 +1,24 @@
+Log your time from timeclocks timelogs into basecamp.
+
+Usage:
+
+	 $ git clone git@github.com:arvixx/timelog-mode.git ~/.emacs.d
+
+	 (add-to-list 'load-path "~/.emacs.d/timelog-mode")
+	 (require 'timelog)
+
+This mode uses the bundled basecamp.el, which is based on org-camp.el:
+
+https://github.com/0x4b/org-camp
+
+basecamp.el needs to be customized. "M-x customize-group" and
+basecamp, fill in at least auth token and subdomain.
+
+When visting your timelog, the current time entry should be
+highlighted. Move up and down between time-entries using M-n and
+M-p. Log an entry by pressing C-c l.
+
+basecamp.el uses a dumb cache. Each request will be cached until emacs
+is restarted, or M-x basecamp-clear-cache is run. This cache is never
+invalidated, and can therefore be wildly incorrect at times,
+especially if you leave Emacs running a while.
