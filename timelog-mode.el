@@ -166,5 +166,7 @@
 (defun timelog-post-command-hook ()
   (timelog-highlight-log))
 
+(defadvice timeclock-visit-timelog (after timelog-mode-activate () activate)
+  (timelog-mode))
 
 (provide 'timelog-mode)
