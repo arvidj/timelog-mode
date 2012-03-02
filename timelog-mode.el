@@ -88,6 +88,7 @@
   (interactive "p")
   (timelog-next (* -1 arg)))
 
+;; TODO: also mark this todo as done?
 (defun timelog-log-this ()
   ""
   (interactive)

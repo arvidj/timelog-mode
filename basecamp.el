@@ -198,6 +198,8 @@ provided `request' string."
 	 (message xml))))
 
 ;;;###autoload
+;; TODO: Currently only shows todos that are not done, and that are
+;; assigned to you.
 (defun basecamp-get-projects-todolist-todo ()
   (interactive)
   (basecamp-get-projects
