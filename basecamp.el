@@ -71,27 +71,26 @@ provided `request' string."
 		(-item- item)
 		(-data- data))
 	(if (and cached-val (not data))
-		(funcall -callback- cached-val))
+		(funcall -callback- cached-val)
+	  (let ((url-request-method (if data "POST" "GET"))
+			(url-request-data (if data (encode-coding-string data 'utf-8)))
+			(url-mime-charset-string "utf-8;q=1, iso-8859-1;q=0.5")
+			(url-request-coding-system 'utf-8)
+			;; (url-https-asynchronous-p nil)
+			(url-request-extra-headers
+			 `(("Accept" . "application/xml")
+			   ("Content-Type" . "application/xml; charset=utf-8")
+			   ("Authorization" .
+				,(concat "Basic "
+						 (base64-encode-string
+						  (concat basecamp-auth-token ":X")))))))
 
-	(let ((url-request-method (if data "POST" "GET"))
-		  (url-request-data (if data (encode-coding-string data 'utf-8)))
-		  (url-mime-charset-string "utf-8;q=1, iso-8859-1;q=0.5")
-		  (url-request-coding-system 'utf-8)
-		  ;; (url-https-asynchronous-p nil)
-		  (url-request-extra-headers
-		   `(("Accept" . "application/xml")
-			 ("Content-Type" . "application/xml; charset=utf-8")
-			 ("Authorization" .
-			  ,(concat "Basic "
-					   (base64-encode-string
-						(concat basecamp-auth-token ":X")))))))
-
-	  (let ((buffer (url-retrieve-synchronously (basecamp-url (concat item ".xml")))))
-		(when buffer
-		  (let ((parsed (xml-parse-region 1 (buffer-size buffer) buffer)))
-			(unless -data-
-			  (puthash (intern -item-) parsed org-cache))
-			(funcall -callback- parsed)))))))
+		(let ((buffer (url-retrieve-synchronously (basecamp-url (concat item ".xml")))))
+		  (when buffer
+			(let ((parsed (xml-parse-region 1 (buffer-size buffer) buffer)))
+			  (unless -data-
+				(puthash (intern -item-) parsed org-cache))
+			  (funcall -callback- parsed))))))))
 
 (defun basecamp-get-projects (callback)
   ""
