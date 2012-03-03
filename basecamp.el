@@ -110,12 +110,10 @@ provided `request' string."
   (basecamp-request (concat "todo_lists/" todo-list-id "/todo_items") callback))
 
 (defun basecamp-get-project-names (projects)
-  (mapcar
-   (lambda (project)
-	 (let ((name (car (xml-node-children (car (xml-get-children project 'name)))))
-		   (id (car (xml-node-children (car (xml-get-children project 'id))))))
-	   `(,id . ,name)))
-   (xml-get-children (car projects) 'project)))
+  (basecamp-map-xml-children
+   (car projects) 'project '(name id)
+   (lambda (xml name id)
+	 `(,id . ,name))))
 
 ;; This probably exists.
 (defun basecamp-reverse-alist (alist)
