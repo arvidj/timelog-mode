@@ -130,7 +130,7 @@ provided `request' string."
   (car (xml-node-children (car (xml-get-children xml name)))))
 
 (defun basecamp-map-xml-children (xml child-name child-map f)
-  (mapc
+  (mapcar
    (lambda (child)
 	 (apply f (cons child
 					(mapcar (lambda (gchild-name)
@@ -186,7 +186,6 @@ provided `request' string."
 	 ,(basecamp-ask-hours)
 	 ,(basecamp-ask-description)))
 
-
   (basecamp-request
    (concat "/todo_items/" todo-id "/time_entries")
    (lambda (xml) (message "Logged!"))
@@ -214,39 +213,26 @@ provided `request' string."
 ;; TODO: Currently shows projects that are arcvhiec, and proejcts
 ;; without lists. It also shows lists without todos. Also shows all
 ;; todo-items, regardless of assignment and completion status.
+;; TODO: async version
 (defun basecamp-get-projects-todolist-todo ()
   (interactive)
-  (basecamp-get-projects
-   (lambda (projects)
-	 (let* ((todo-list-id-name nil)
-			(todo-items-id-name nil)
+  (let* ((project-id (basecamp-ask-project))
 
-			(proj-name-id (basecamp-get-project-names projects))
-			(project-id (basecamp-reverse-cread "Project: " proj-name-id)))
+		 (todolists (basecamp-get-todolists-project project-id))
+		 (todo-list-id (basecamp-reverse-cread
+						"Todo-list: "
+						(basecamp-map-xml-children
+						 (car todolists) 'todo-list '(name id)
+						 (lambda (xml todo-list-name todo-list-id)
+						   `(,todo-list-id . ,todo-list-name)))))
 
-	   (basecamp-get-todolists-project
-		project-id
-		(lambda (todolists)
+		 (todo-items (basecamp-get-todo-items-todo-list todo-list-id)))
 
-		  (basecamp-map-xml-children
-		   (car todolists) 'todo-list '(name id)
-		   (lambda (xml todo-list-name todo-list-id)
-			 (setq todo-list-id-name
-				   (cons `(,todo-list-id . ,todo-list-name)
-						 todo-list-id-name))))
-
-		  (let* ((todo-list-id (basecamp-reverse-cread "Todo-list: " todo-list-id-name)))
-			(basecamp-get-todo-items-todo-list
-			 todo-list-id
-			 (lambda (todo-items)
-			   (basecamp-map-xml-children
-				(car todo-items) 'todo-item '(content id)
-				(lambda (xml todo-item-content todo-item-id)
-				  (setq todo-items-id-name
-						(cons `(,todo-item-id . ,todo-item-content)
-							  todo-items-id-name)))))))
-
-		  (basecamp-reverse-cread "Todo: " todo-items-id-name)))))))
+	(basecamp-reverse-cread
+	 "Todo: " (basecamp-map-xml-children
+			   (car todo-items) 'todo-item '(content id)
+			   (lambda (xml todo-item-content todo-item-id)
+				 `(,todo-item-id . ,todo-item-content))))))
 
 (provide 'basecamp)
 
