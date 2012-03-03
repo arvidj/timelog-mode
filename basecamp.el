@@ -169,6 +169,11 @@ provided `request' string."
 		 (val (read-from-minibuffer (concat "Date (" dflt "): ") initial-contents)))
 	(if (string= val "") dflt val)))
 
+(defun basecamp-ask-project ()
+  (basecamp-reverse-cread
+   "Project: "
+   (basecamp-get-project-names (basecamp-get-projects))))
+
 (defun basecamp-ask-description (&optional initial-contents)
   (read-from-minibuffer "Description: " initial-contents))
 
@@ -197,10 +202,7 @@ provided `request' string."
 ;;;###autoload
 (defun basecamp-get-time-entries-project (project-id)
   ""
-  (interactive
-   `(,(basecamp-get-projects
-	   (lambda (projects)
-		 (basecamp-reverse-cread "Project: " (basecamp-get-project-names projects))))))
+  (interactive `(,(basecamp-ask-project)))
 
   (basecamp-request
    (concat "projects/" project-id "/time_entries")
