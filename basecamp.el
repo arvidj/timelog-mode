@@ -218,19 +218,19 @@ provided `request' string."
   (interactive)
   (let* ((project-id (basecamp-ask-project))
 
-		 (todolists (basecamp-get-todolists-project project-id))
-		 (todo-list-id (basecamp-reverse-cread
+		 (lists (basecamp-get-todolists-project project-id))
+		 (list-id (basecamp-reverse-cread
 						"Todo-list: "
 						(basecamp-map-xml-children
-						 (car todolists) 'todo-list '(name id)
-						 (lambda (xml todo-list-name todo-list-id)
-						   `(,todo-list-id . ,todo-list-name)))))
+						 (car lists) 'todo-list '(name id)
+						 (lambda (xml list-name list-id)
+						   `(,list-id . ,list-name)))))
 
-		 (todo-items (basecamp-get-todo-items-todo-list todo-list-id)))
+		 (todos (basecamp-get-todo-items-todo-list list-id)))
 
 	(basecamp-reverse-cread
 	 "Todo: " (basecamp-map-xml-children
-			   (car todo-items) 'todo-item '(content id)
+			   (car todos) 'todo-item '(content id)
 			   (lambda (xml todo-item-content todo-item-id)
 				 `(,todo-item-id . ,todo-item-content))))))
 
