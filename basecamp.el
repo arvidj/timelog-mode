@@ -100,6 +100,15 @@ provided `request' string."
   ""
   (basecamp-request "todo_lists" callback))
 
+(defun basecamp-get-todolists-project (project-id callback)
+  ""
+  (basecamp-request (concat "projects/" project-id "/todo_lists") callback))
+
+
+(defun basecamp-get-todo-items-todo-list (todo-list-id callback)
+  ""
+  (basecamp-request (concat "todo_lists/" todo-list-id "/todo_items") callback))
+
 (defun basecamp-get-project-names (projects)
   (mapcar
    (lambda (project)
@@ -197,47 +206,43 @@ provided `request' string."
 	 (message xml))))
 
 ;;;###autoload
-;; TODO: Currently only shows todos that are not done, and that are
-;; assigned to you.
+
+;; TODO: Currently shows projects that are arcvhiec, and proejcts
+;; without lists. It also shows lists without todos. Also shows all
+;; todo-items, regardless of assignment and completion status.
 (defun basecamp-get-projects-todolist-todo ()
   (interactive)
   (basecamp-get-projects
    (lambda (projects)
-	 ;; Index project-name by project-id
-	 (basecamp-get-todolist
-	  (lambda (todos)
-		(let ((proj-name-id (basecamp-get-project-names projects))
-			  (project-todolists (make-hash-table))
-			  (todolist-todos (make-hash-table)))
+	 (let* ((todo-list-id-name nil)
+			(todo-items-id-name nil)
 
-		  ;; Index todo-lists by project id.
+			(proj-name-id (basecamp-get-project-names projects))
+			(project-id (basecamp-reverse-cread "Project: " proj-name-id)))
+
+	   (basecamp-get-todolists-project
+		project-id
+		(lambda (todolists)
+
 		  (basecamp-map-xml-children
-		   (car todos) 'todo-list '(project-id name id)
-		   (lambda (xml project-id todo-list-name todo-list-id)
+		   (car todolists) 'todo-list '(name id)
+		   (lambda (xml todo-list-name todo-list-id)
+			 (setq todo-list-id-name
+				   (cons `(,todo-list-id . ,todo-list-name)
+						 todo-list-id-name))))
 
-			 (puthash (intern project-id)
-					  (cons `(,todo-list-id . ,todo-list-name)
-							(gethash (intern project-id) project-todolists))
-					  project-todolists)
+		  (let* ((todo-list-id (basecamp-reverse-cread "Todo-list: " todo-list-id-name)))
+			(basecamp-get-todo-items-todo-list
+			 todo-list-id
+			 (lambda (todo-items)
+			   (basecamp-map-xml-children
+				(car todo-items) 'todo-item '(content id)
+				(lambda (xml todo-item-content todo-item-id)
+				  (setq todo-items-id-name
+						(cons `(,todo-item-id . ,todo-item-content)
+							  todo-items-id-name)))))))
 
-			 ;; Index todos by todolist
-			 (basecamp-map-xml-children
-			  (car (xml-get-children xml 'todo-items)) 'todo-item '(id content)
-			  (lambda (xml id content)
-				(puthash (intern todo-list-id)
-						 (cons `(,id . ,content)
-							   (gethash (intern todo-list-id) todolist-todos))
-						 todolist-todos)))))
-
-		  ;; TODO: do not ask for projects or lists where we have no
-		  ;; todos
-
-		  ;; Read project, list and todo.
-		  (let* ((project-id (basecamp-reverse-cread "Project: " proj-name-id))
-				 (todolist-id (basecamp-reverse-cread "List: " (gethash (intern project-id) project-todolists))))
-			(basecamp-reverse-cread "Todo: " (gethash (intern todolist-id) todolist-todos)))))))))
-
-
+		  (basecamp-reverse-cread "Todo: " todo-items-id-name)))))))
 
 (provide 'basecamp)
 
