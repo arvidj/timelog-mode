@@ -65,13 +65,15 @@ provided `request' string."
 (defvar org-cache (make-hash-table))
 
 ;; This could optionally take a "?responsible_party=#{id}"
-(defun basecamp-request (item callback &optional data)
+(defun basecamp-request (item &optional callback data)
   (let ((-callback- callback)
 		(cached-val (gethash (intern item) org-cache))
 		(-item- item)
 		(-data- data))
 	(if (and cached-val (not data))
-		(funcall -callback- cached-val)
+		(if callback
+			(funcall -callback- cached-val)
+		  cached-val)
 	  (let ((url-request-method (if data "POST" "GET"))
 			(url-request-data (if data (encode-coding-string data 'utf-8)))
 			(url-mime-charset-string "utf-8;q=1, iso-8859-1;q=0.5")
@@ -90,22 +92,24 @@ provided `request' string."
 			(let ((parsed (xml-parse-region 1 (buffer-size buffer) buffer)))
 			  (unless -data-
 				(puthash (intern -item-) parsed org-cache))
-			  (funcall -callback- parsed))))))))
+			  (if callback
+				  (funcall -callback- parsed)
+				parsed))))))))
 
-(defun basecamp-get-projects (callback)
+(defun basecamp-get-projects (&optional callback)
   ""
   (basecamp-request "projects" callback))
 
-(defun basecamp-get-todolist (callback)
+(defun basecamp-get-todolist (&optional callback)
   ""
   (basecamp-request "todo_lists" callback))
 
-(defun basecamp-get-todolists-project (project-id callback)
+(defun basecamp-get-todolists-project (project-id &optional callback)
   ""
   (basecamp-request (concat "projects/" project-id "/todo_lists") callback))
 
 
-(defun basecamp-get-todo-items-todo-list (todo-list-id callback)
+(defun basecamp-get-todo-items-todo-list (todo-list-id &optional callback)
   ""
   (basecamp-request (concat "todo_lists/" todo-list-id "/todo_items") callback))
 
